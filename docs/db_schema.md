@@ -1,68 +1,86 @@
-# DB 스키마 정의 (Community Board Service — CKEditor 5)
+# DB 스키마 (멀티 게시판 + 조회수/점수 반영)
 
-## users
+## 1) 테이블 개요
+- `users` : 사용자 계정 및 프로필, **score**(유저점수) 포함
+- `boards` : 게시판 메타(동적 추가/숨김/정렬/설정)
+- `posts` : 게시글(뉴스/실험/자유/커스텀) + **view_count**
+- `comments` : 댓글
+- `files` : 업로드 파일(첨부)
+
+## 2) users
 | 컬럼 | 타입 | 설명 |
-|------|------|------|
-| id | INTEGER | 사용자 PK |
-| name | TEXT | 사용자 이름 |
-| email | TEXT | 이메일 |
-| password | TEXT | 암호화된 비밀번호 |
-| avatar_url | TEXT | 프로필 이미지 경로 |
-| role | ENUM('user','admin') | 사용자 권한 |
-| created_at | DATETIME | 가입일 |
-| updated_at | DATETIME | 수정일 |
-
----
-
-## boards
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| id | INTEGER | 게시판 PK |
-| name | TEXT | 게시판 이름 (예: notice, free, photo) |
-| title | TEXT | 게시판 제목 (예: 공지사항, 자유게시판) |
-| description | TEXT | 게시판 설명 |
+|---|---|---|
+| id | INTEGER PK | 사용자 ID |
+| email | TEXT UNIQUE | 로그인 ID |
+| nickname | TEXT | 표시 이름 |
+| password_hash | TEXT | 비밀번호 해시 |
+| score | INTEGER DEFAULT 0 NOT NULL | **유저 점수** |
 | created_at | DATETIME | 생성일 |
-
----
-
-## posts
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| id | INTEGER | 게시글 PK |
-| board_id | INTEGER | 게시판 ID (FK: boards.id) |
-| user_id | INTEGER | 작성자 ID (FK: users.id) |
-| title | TEXT | 제목 |
-| content | LONGTEXT | **HTML 본문 (CKEditor 5 저장 포맷)** |
-| like_count | INTEGER | 좋아요 수 |
-| view_count | INTEGER | 조회수 |
-| created_at | DATETIME | 작성일 |
 | updated_at | DATETIME | 수정일 |
 
----
-
-## comments
+## 3) boards
 | 컬럼 | 타입 | 설명 |
-|------|------|------|
-| id | INTEGER | 댓글 PK |
-| post_id | INTEGER | 게시글 ID (FK: posts.id) |
-| user_id | INTEGER | 작성자 ID (FK: users.id) |
-| content | TEXT | **HTML 허용(짧은 포맷), 서버단 sanitize 필수** |
-| created_at | DATETIME | 작성일 |
+|---|---|---|
+| id | INTEGER PK | 게시판 ID |
+| name | TEXT | 게시판 이름(표시명) |
+| slug | TEXT UNIQUE | 라우팅 키 (`news`, `lab`, `free`, `custom`) |
+| type | ENUM('news','lab','free','custom') DEFAULT 'custom' | 게시판 유형 |
+| is_private | BOOLEAN DEFAULT 0 | 비공개 여부 |
+| is_hidden | BOOLEAN DEFAULT 0 | 메뉴 숨김 여부 |
+| order_no | INTEGER DEFAULT 0 | 메뉴 정렬 |
+| settings | JSON NULL | 게시판별 옵션(에디터, 업로드 제한 등) |
+| created_by | INTEGER NULL FK users.id | 생성자 |
+| created_at | DATETIME | 생성일 |
+| updated_at | DATETIME | 수정일 |
 
----
-
-## files
+## 4) posts
 | 컬럼 | 타입 | 설명 |
-|------|------|------|
-| id | INTEGER | 파일 PK |
-| post_id | INTEGER | 게시글 ID (FK: posts.id, NULL 허용 — 에디터 내 임시 업로드 지원) |
-| file_url | TEXT | 파일 경로 |
-| file_type | TEXT | MIME or 분류 (image/*, application/pdf 등) |
-| size | INTEGER | 바이트 단위 파일 크기 |
+|---|---|---|
+| id | INTEGER PK | 게시글 ID |
+| board_id | INTEGER FK boards.id | 소속 게시판 |
+| author_id | INTEGER FK users.id | 작성자 |
+| title | TEXT | 제목 |
+| content | TEXT | 본문(HTML, CKEditor5) |
+| status | ENUM('draft','published','archived') DEFAULT 'published' | 상태 |
+| published_at | DATETIME NULL | 발행/예약발행 |
+| is_pinned | BOOLEAN DEFAULT 0 | 상단 고정 |
+| thumbnail_url | TEXT NULL | 썸네일(뉴스) |
+| tags | JSON NULL | 태그 |
+| view_count | INTEGER DEFAULT 0 NOT NULL | **조회수** |
+| created_at | DATETIME | 생성일 |
+| updated_at | DATETIME | 수정일 |
+
+## 5) comments
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | INTEGER PK | 댓글 ID |
+| post_id | INTEGER FK posts.id | 대상 글 |
+| author_id | INTEGER FK users.id | 작성자 |
+| content | TEXT | 내용 |
+| created_at | DATETIME | 생성일 |
+| updated_at | DATETIME | 수정일 |
+
+## 6) files
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | INTEGER PK | 파일 ID |
+| post_id | INTEGER FK posts.id | 연결 글 |
+| original_name | TEXT | 원본 파일명 |
+| url | TEXT | 저장 URL |
+| size | INTEGER | 바이트 |
+| content_type | TEXT | MIME |
 | created_at | DATETIME | 업로드일 |
 
----
+## 7) 초기 시드
+```json
+[
+  {"name":"뉴스게시판","slug":"news","type":"news","order_no":10},
+  {"name":"실험게시판","slug":"lab","type":"lab","order_no":20},
+  {"name":"자유게시판","slug":"free","type":"free","order_no":30}
+]
+```
 
-### 서버단 보안/무결성 참고
-- HTML sanitize 화이트리스트: `a[href|target|rel]`, `img[src|alt|width|height|style]`, `p`, `h1-h6`, `ul/ol/li`, `strong/em/blockquote/code/pre`, `table/thead/tbody/tr/td/th`, `figure/figcaption`, `span[style]`
-- 파일 업로드 제한: 확장자/용량(예: 5MB), 이미지 리사이즈(옵션), 썸네일 생성(옵션)
+## 8) 마이그레이션(Sequelize) 포인트
+- users.score (INTEGER, default 0, NOT NULL)
+- boards.slug UNIQUE, type enum, is_private/is_hidden/order_no/settings/created_by
+- posts.status enum, published_at, is_pinned, thumbnail_url, tags, **view_count**
