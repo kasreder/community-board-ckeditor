@@ -54,3 +54,26 @@
 - 봇/스크래퍼 차단(User-Agent/RateLimit)
 - 작성 빈도 제한(분당/시간당)
 - 권한: is_private 읽기 가드, 보드/글/댓글 수정 권한 확인
+
+## 8)홈 & 반응형 내비게이션 (상세 명세 추가)
+
+### 1) 홈(Home) 섹션 요구사항
+- **데이터 흐름**
+  - `/api/boards` → 활성 보드 목록 수신
+  - 각 보드에 대해 `/api/boards/:slug/posts?limit=5` 호출
+- **UI/동작**
+  - 보드명 + `더보기`(→ `/b/:slug`)
+  - 리스트 항목에는 제목/작성일/👁 view_count가 표시됨
+- **성능/캐시**
+  - 첫 렌더 시 캐시 표시 → 백그라운드 재검증(SWR)로 최신화
+- **수용 기준**
+  - 각 보드별 최대 5개 항목 표시
+  - 로딩/빈 상태/에러 표준 컴포넌트 사용
+
+### 2) 반응형 내비게이션
+- **규칙**: **≤ 640px** → NavigationBar(+ NavigationDestination) / **> 640px** → NavigationRail(+ NavigationRailDestination)
+- **공통 목적지**: 홈 · 게시판 · 프로필(예시). 선택 상태 동기화.
+- **접근성/사용성**
+  - focus/semantic 라벨 제공, 키보드 탭 이동 가능
+  - Rail 모드에서는 아이콘+라벨 모두 노출(labelType = all)
+

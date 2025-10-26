@@ -14,6 +14,23 @@
 - 조회수: 상세 진입 시 서버 증가(세션/IP 30분 캐싱 권장)
 - 점수: 글 작성 +10, 댓글 작성 +1(삭제 회수는 선택)
 
+## Homepage & Navigation (추가 규격)
+
+### Homepage
+- **목표**: 홈에서 각 게시판의 **최신글 5개**를 한 눈에 제공합니다.
+- **데이터 소스**: `GET /api/boards`로 활성 보드 목록을 조회 후,
+  각 보드에 대해 `GET /api/boards/:slug/posts?limit=5` 요청.
+- **UI**: 보드별 섹션(Card/Grid). 섹션 상단에 보드명과 `더보기` → `/b/:slug` 링크.
+- **성능**: 최초 진입 시 캐시된 결과 먼저 표시, 비동기 최신화로 보정(SWR).
+- **수용 기준**: 보드가 N개면 N개의 섹션이 노출되고, 각 섹션에는 **최대 5개**의 글이 표시됨.
+
+### Responsive Navigation
+- **브레이크포인트**: 가로폭 **640px 이하**에서는 하단 **NavigationBar(NavigationDestination)**,
+  **640px 초과**에서는 좌측 **NavigationRail(NavigationRailDestination)** 사용.
+- **일관성**: 양쪽 컴포넌트의 목적지는 동일하게 유지(홈/게시판/프로필 등).
+- **접근성**: 각 Destination에 `tooltip/semanticLabel` 제공.
+
+
 ## 기술 스택
 | 구분 | 기술 |
 |------|------|
