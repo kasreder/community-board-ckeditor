@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CKEditor 5 Embedded</title>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      #editor {
+        min-height: 320px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <script>
+      let editorInstance;
+      let authToken = '';
+
+      function postContent(html) {
+        if (window.parent) {
+          window.parent.postMessage({ type: 'ckeditor.change', payload: html }, '*');
+        }
+        if (window.flutter_inappwebview) {
+          window.flutter_inappwebview.callHandler('editorChange', html);
+        }
+      }
+
+      function buildUploadConfig() {
+        return {
+          uploadUrl: '/api/files/upload',
+          withCredentials: true,
+          headers: authToken ? { Authorization: 'Bearer ' + authToken } : {},
+        };
+      }
+
+      ClassicEditor.create(document.querySelector('#editor'), {
+        toolbar: [
+          'heading',
+          '|',
+          'bold',
+          'italic',
+          'underline',
+          'strikethrough',
+          'link',
+          'bulletedList',
+          'numberedList',
+          'blockQuote',
+          '|',
+          'insertTable',
+          'mediaEmbed',
+          'codeBlock',
+          '|',
+          'undo',
+          'redo',
+          '|',
+          'imageUpload',
+          'imageStyle:inline',
+          'imageStyle:block',
+          'imageStyle:side',
+          '|',
+          'alignment:left',
+          'alignment:center',
+          'alignment:right'
+        ],
+        simpleUpload: buildUploadConfig(),
+      })
+        .then((editor) => {
+          editorInstance = editor;
+          postContent(editor.getData());
+          editor.model.document.on('change:data', () => {
+            postContent(editor.getData());
+          });
+        })
+        .catch((error) => console.error('CKEditor init error', error));
+
+      window.addEventListener('message', (event) => {
+        const data = event.data || {};
+        if (!data.type) return;
+
+        if (data.type === 'ckeditor.setData' && editorInstance) {
+          editorInstance.setData(data.payload || '');
+        }
+
+        if (data.type === 'ckeditor.focus' && editorInstance) {
+          editorInstance.editing.view.focus();
+        }
+
+        if (data.type === 'ckeditor.setToken') {
+          authToken = data.payload || '';
+          if (editorInstance) {
+            const config = editorInstance.config.get('simpleUpload') || {};
+            config.headers = authToken ? { Authorization: 'Bearer ' + authToken } : {};
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

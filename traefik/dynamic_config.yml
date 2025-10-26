@@ -1,0 +1,21 @@
+http:
+  routers:
+    backend:
+      rule: Host(`api.community-board.localhost`)
+      entryPoints:
+        - web
+      service: backend
+    frontend:
+      rule: Host(`community-board.localhost`)
+      entryPoints:
+        - web
+      service: frontend
+  services:
+    backend:
+      loadBalancer:
+        servers:
+          - url: http://backend:4000
+    frontend:
+      loadBalancer:
+        servers:
+          - url: http://frontend:8080
