@@ -9,30 +9,37 @@ export default (sequelize) => {
         autoIncrement: true,
         primaryKey: true,
       },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       email: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(191),
         allowNull: false,
         unique: true,
       },
-      password: {
-        type: DataTypes.STRING,
+      nickname: {
+        type: DataTypes.STRING(100),
         allowNull: false,
       },
-      avatar_url: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      role: {
-        type: DataTypes.ENUM('user', 'admin'),
+      password_hash: {
+        type: DataTypes.STRING(255),
         allowNull: false,
-        defaultValue: 'user',
+      },
+      score: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     },
     {
+      tableName: 'users',
       timestamps: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at',

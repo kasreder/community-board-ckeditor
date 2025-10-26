@@ -11,21 +11,20 @@ export const Post = PostModel(sequelize);
 export const Comment = CommentModel(sequelize);
 export const File = FileModel(sequelize);
 
-// Associations
-User.hasMany(Post, { foreignKey: 'user_id' });
-Post.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(Post, { foreignKey: 'author_id', as: 'posts' });
+Post.belongsTo(User, { foreignKey: 'author_id', as: 'author' });
 
-User.hasMany(Comment, { foreignKey: 'user_id' });
-Comment.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(Comment, { foreignKey: 'author_id', as: 'comments' });
+Comment.belongsTo(User, { foreignKey: 'author_id', as: 'author' });
 
-Board.hasMany(Post, { foreignKey: 'board_id' });
-Post.belongsTo(Board, { foreignKey: 'board_id' });
+Board.hasMany(Post, { foreignKey: 'board_id', as: 'posts' });
+Post.belongsTo(Board, { foreignKey: 'board_id', as: 'board' });
 
-Post.hasMany(Comment, { foreignKey: 'post_id', onDelete: 'CASCADE' });
-Comment.belongsTo(Post, { foreignKey: 'post_id' });
+Post.hasMany(Comment, { foreignKey: 'post_id', as: 'comments', onDelete: 'CASCADE' });
+Comment.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
 
-Post.hasMany(File, { foreignKey: 'post_id' });
-File.belongsTo(Post, { foreignKey: 'post_id' });
+Post.hasMany(File, { foreignKey: 'post_id', as: 'attachments' });
+File.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
 
 export default {
   sequelize,
