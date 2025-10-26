@@ -13,23 +13,38 @@ export default (sequelize) => {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: true,
       },
-      file_url: {
-        type: DataTypes.STRING,
+      original_name: {
+        type: DataTypes.STRING(255),
         allowNull: false,
       },
-      file_type: {
-        type: DataTypes.STRING,
+      url: {
+        type: DataTypes.STRING(1024),
         allowNull: false,
       },
       size: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
       },
+      content_type: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     },
     {
+      tableName: 'files',
       timestamps: true,
       createdAt: 'created_at',
-      updatedAt: false,
+      updatedAt: 'updated_at',
     }
   );
 

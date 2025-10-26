@@ -13,19 +13,30 @@ export default (sequelize) => {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
       },
-      user_id: {
+      author_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
       },
       content: {
-        type: DataTypes.TEXT,
+        type: DataTypes.TEXT('long'),
         allowNull: false,
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     },
     {
+      tableName: 'comments',
       timestamps: true,
       createdAt: 'created_at',
-      updatedAt: false,
+      updatedAt: 'updated_at',
     }
   );
 

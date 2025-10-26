@@ -1,62 +1,29 @@
 import { Router } from 'express';
-import { body, param, query } from 'express-validator';
-import {
-  listPosts,
-  getPostById,
-  createPost,
-  updatePost,
-  deletePost,
-  toggleLike,
-} from '../controllers/postController.js';
-import { authenticate } from '../middleware/auth.js';
+import { body, param } from 'express-validator';
+import { getPostById, updatePost, deletePost } from '../controllers/postController.js';
 import validateRequest from '../middleware/validateRequest.js';
 
 const router = Router();
 
-router.get(
-  '/',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 50 }),
-  ],
-  validateRequest,
-  listPosts
-);
-
-router.get('/:id', [param('id').isInt()], validateRequest, getPostById);
-
-router.post(
-  '/',
-  authenticate,
-  [
-    body('board_id').isInt().withMessage('board_id is required'),
-    body('title').notEmpty().withMessage('Title is required'),
-    body('content').notEmpty().withMessage('Content is required'),
-  ],
-  validateRequest,
-  createPost
-);
+router.get('/:id', [param('id').isInt().withMessage('id must be an integer')], validateRequest, getPostById);
 
 router.put(
   '/:id',
-  authenticate,
   [
-    param('id').isInt(),
-    body('title').notEmpty().withMessage('Title is required'),
-    body('content').notEmpty().withMessage('Content is required'),
+    param('id').isInt().withMessage('id must be an integer'),
+    body('title').optional().isString(),
+    body('content').optional().isString(),
+    body('status')
+      .optional()
+      .isIn(['draft', 'published', 'archived'])
+      .withMessage('status must be draft, published or archived'),
+    body('is_pinned').optional().isBoolean(),
+    body('published_at').optional().isISO8601(),
   ],
   validateRequest,
   updatePost
 );
 
-router.delete('/:id', authenticate, [param('id').isInt()], validateRequest, deletePost);
-
-router.post(
-  '/:id/like',
-  authenticate,
-  [param('id').isInt()],
-  validateRequest,
-  toggleLike
-);
+router.delete('/:id', [param('id').isInt().withMessage('id must be an integer')], validateRequest, deletePost);
 
 export default router;
